@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CodeBlock } from "@/components/ui/code-block";
 
 export const metadata: Metadata = {
@@ -60,23 +59,6 @@ const diffLines = [
 export default function RoastResultsPage() {
     return (
         <div className="min-h-screen bg-[#0C0C0C]">
-            <nav className="flex h-14 items-center justify-between border-b border-[#1F1F1F] bg-[#0C0C0C] px-10">
-                <div className="flex items-center gap-2">
-                    <span className="font-mono text-xl font-bold text-[#10B981]">
-                        {">"}
-                    </span>
-                    <span className="font-mono text-lg font-medium text-[#E5E5E5]">
-                        devroast
-                    </span>
-                </div>
-                <Link
-                    href="/leaderboard"
-                    className="font-mono text-sm text-[#A3A3A3] hover:text-[#E5E5E5]"
-                >
-                    leaderboard
-                </Link>
-            </nav>
-
             <main className="mx-auto flex w-[960px] max-w-full flex-col gap-10 px-20 py-10">
                 <section className="flex items-center gap-12">
                     <div className="relative flex h-[180px] w-[180px] items-center justify-center">
