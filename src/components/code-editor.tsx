@@ -13,13 +13,30 @@ export interface CodeEditorProps {
     value?: string;
     onChange?: (value: string) => void;
     className?: string;
+    maxLines?: number;
+    maxChars?: number;
 }
 
+const DEFAULT_MAX_LINES = 50;
+const LINE_HEIGHT = 18; // 12px * 1.5
+const DEFAULT_MAX_CHARS = 2000;
+
 export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
-    ({ value = "", onChange, className }, _ref) => {
+    (
+        {
+            value = "",
+            onChange,
+            className,
+            maxLines = DEFAULT_MAX_LINES,
+            maxChars = DEFAULT_MAX_CHARS,
+        },
+        _ref,
+    ) => {
         const [language, setLanguage] = useState<LanguageId>("plaintext");
         const lines = value ? value.split("\n") : [];
         const lineCount = Math.max(lines.length, 16);
+        const charCount = value.length;
+        const isOverLimit = charCount > maxChars;
 
         useEffect(() => {
             const stored = getStoredLanguage();
@@ -79,7 +96,10 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
                             </span>
                         ))}
                     </div>
-                    <div className="relative flex-1 overflow-auto">
+                    <div
+                        className="relative flex-1 overflow-y-auto"
+                        style={{ maxHeight: maxLines * LINE_HEIGHT + 24 }}
+                    >
                         <Editor
                             value={value}
                             onValueChange={handleChange}
@@ -95,6 +115,13 @@ export const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
                             spellCheck={false}
                             placeholder="// paste your code here..."
                         />
+                    </div>
+                    <div
+                        className={`flex justify-end border-t border-zinc-800 bg-zinc-900 px-3 py-1 text-xs ${isOverLimit ? "text-red-400" : "text-zinc-500"}`}
+                    >
+                        <span>
+                            {charCount} / {maxChars}
+                        </span>
                     </div>
                 </div>
             </div>
