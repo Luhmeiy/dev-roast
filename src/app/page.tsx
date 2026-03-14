@@ -1,11 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import { CodeEditor } from "@/components/code-editor";
+import { Suspense } from "react";
 import { LeaderboardTable } from "@/components/leaderboard-table";
-import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
+import { MetricsSection } from "@/components/metrics-section";
+import { RoastForm } from "@/components/roast-form";
+import { prefetchMetrics } from "@/trpc/server";
 
 const leaderboardData = [
     {
@@ -39,10 +37,18 @@ const leaderboardData = [
     },
 ];
 
-export default function Home() {
-    const [code, setCode] = useState("");
-    const MAX_CHARS = 2000;
-    const isOverLimit = code.length > MAX_CHARS;
+function MetricsFallback() {
+    return (
+        <div className="flex items-center justify-center gap-6 text-xs text-zinc-500">
+            <div className="h-4 w-24 animate-pulse rounded bg-zinc-800" />
+            <span>·</span>
+            <div className="h-4 w-20 animate-pulse rounded bg-zinc-800" />
+        </div>
+    );
+}
+
+export default async function Home() {
+    await prefetchMetrics();
 
     return (
         <div className="min-h-screen bg-zinc-950">
@@ -58,34 +64,12 @@ export default function Home() {
                     </p>
                 </section>
 
-                <section className="flex w-[780px] max-w-full flex-col">
-                    <CodeEditor
-                        value={code}
-                        onChange={setCode}
-                        maxChars={MAX_CHARS}
-                    />
-                </section>
-
-                <section className="flex w-[780px] max-w-full items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Toggle defaultChecked>roast mode</Toggle>
-                        <span className="text-xs text-zinc-500">
-                            {"// maximum sarcasm enabled"}
-                        </span>
-                    </div>
-                    <Button
-                        variant="primary"
-                        size="default"
-                        disabled={isOverLimit}
-                    >
-                        $ roast_my_code
-                    </Button>
-                </section>
+                <RoastForm />
 
                 <section className="flex items-center justify-center gap-6 text-xs text-zinc-500">
-                    <span>2,847 codes roasted</span>
-                    <span>·</span>
-                    <span>avg score: 4.2/10</span>
+                    <Suspense fallback={<MetricsFallback />}>
+                        <MetricsSection />
+                    </Suspense>
                 </section>
 
                 <section className="mt-10 flex w-[960px] max-w-full flex-col gap-6">

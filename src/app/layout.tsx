@@ -1,6 +1,7 @@
 import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
 import { Navbar } from "@/components/navbar";
+import { TRPCReactProvider } from "@/trpc/client";
 
 const jetbrainsMono = JetBrains_Mono({
     variable: "--font-jetbrains-mono",
@@ -20,8 +21,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={jetbrainsMono.variable}>
-                <Navbar />
-                {children}
+                <TRPCReactProvider>
+                    <Navbar />
+                    {children}
+                </TRPCReactProvider>
             </body>
         </html>
     );
