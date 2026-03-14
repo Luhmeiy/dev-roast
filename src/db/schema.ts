@@ -1,0 +1,56 @@
+import {
+    boolean,
+    pgEnum,
+    pgTable,
+    real,
+    serial,
+    text,
+    timestamp,
+    uuid,
+} from "drizzle-orm/pg-core";
+
+export const scoreStatusEnum = pgEnum("score_status", [
+    "excellent",
+    "good",
+    "fair",
+    "poor",
+    "critical",
+]);
+
+export const languageEnum = pgEnum("language", [
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "csharp",
+    "cpp",
+    "c",
+    "go",
+    "rust",
+    "ruby",
+    "php",
+    "swift",
+    "kotlin",
+    "scala",
+    "html",
+    "css",
+    "sql",
+    "bash",
+    "powershell",
+    "json",
+    "yaml",
+    "markdown",
+    "plaintext",
+]);
+
+export const roasts = pgTable("roasts", {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    language: languageEnum("language").notNull().default("plaintext"),
+    score: real("score").notNull(),
+    scoreStatus: scoreStatusEnum("score_status").notNull(),
+    roastMode: boolean("roast_mode").notNull().default(true),
+    roastMessage: text("roast_message"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    shareId: uuid("share_id").notNull().unique(),
+});

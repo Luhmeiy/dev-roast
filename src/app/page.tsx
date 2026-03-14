@@ -57,11 +57,7 @@ export default function Home() {
                 </section>
 
                 <section className="flex w-[780px] max-w-full flex-col">
-                    <CodeEditor
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        rows={16}
-                    />
+                    <CodeEditor value={code} onChange={setCode} />
                 </section>
 
                 <section className="flex w-[780px] max-w-full items-center justify-between">
