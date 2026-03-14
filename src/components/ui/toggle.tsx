@@ -15,7 +15,7 @@ const toggle = tv({
 });
 
 const track = tv({
-    base: "relative h-[22px] w-[40px] rounded-full transition-colors",
+    base: "relative h-[22px] w-[40px] rounded-full transition-colors cursor-pointer",
     variants: {
         checked: {
             true: "bg-toggle-on",

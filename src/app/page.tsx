@@ -46,7 +46,7 @@ export default function Home() {
         <div className="min-h-screen bg-zinc-950">
             <main className="mx-auto flex max-w-4xl flex-col gap-8 px-10 py-20">
                 <section className="flex flex-col gap-3">
-                    <h1 className="font-mono text-4xl font-bold text-zinc-50">
+                    <h1 className="text-4xl font-bold text-zinc-50">
                         {"// drop your code below and we'll rate it"}
                         <br />— brutally honest or full roast mode
                     </h1>
@@ -74,15 +74,15 @@ export default function Home() {
                     </Button>
                 </section>
 
-                <section className="flex items-center justify-center gap-6 text-sm text-zinc-500">
+                <section className="flex items-center justify-center gap-6 text-xs text-zinc-400">
                     <span>2,847 codes roasted</span>
                     <span>·</span>
                     <span>avg score: 4.2/10</span>
                 </section>
 
-                <section className="mt-10 flex flex-col gap-6">
+                <section className="mt-10 flex w-[960px] max-w-full flex-col gap-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="font-mono text-lg font-bold text-zinc-50">
+                        <h2 className="text-lg font-bold text-zinc-50">
                             {
                                 "// the worst code on the internet, ranked by shame"
                             }
