@@ -198,13 +198,13 @@ export function ClientComponent() {
 
 ## 5. Tasks / Todos
 
-- [ ] Install tRPC and dependencies
-- [ ] Create `trpc/init.ts` with context and base procedures
-- [ ] Create `trpc/router.ts` with AppRouter type
-- [ ] Create API route handler at `app/api/trpc/[trpc]/route.ts`
-- [ ] Create `trpc/query-client.ts` factory
-- [ ] Create `trpc/client.tsx` with TRPCReactProvider
-- [ ] Create `trpc/server.tsx` with server utilities
-- [ ] Wrap app in `TRPCReactProvider` (layout.tsx)
-- [ ] Test with sample procedure
+- [x] Install tRPC and dependencies
+- [x] Create `trpc/init.ts` with context and base procedures
+- [x] Create `trpc/router.ts` with AppRouter type
+- [x] Create API route handler at `app/api/trpc/[trpc]/route.ts`
+- [x] Create `trpc/query-client.ts` factory
+- [x] Create `trpc/client.tsx` with TRPCReactProvider
+- [x] Create `trpc/server.ts` with server utilities
+- [x] Wrap app in `TRPCReactProvider` (layout.tsx)
+- [x] Test with sample procedure (metrics)
 - [ ] Add sub-routers for different features (as needed)
