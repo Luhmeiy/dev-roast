@@ -1,5 +1,6 @@
 import {
     boolean,
+    jsonb,
     pgEnum,
     pgTable,
     real,
@@ -51,6 +52,9 @@ export const roasts = pgTable("roasts", {
     scoreStatus: scoreStatusEnum("score_status").notNull(),
     roastMode: boolean("roast_mode").notNull().default(true),
     roastMessage: text("roast_message"),
+    verdict: text("verdict"),
+    issues: jsonb("issues"),
+    suggestedFix: jsonb("suggested_fix"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     shareId: uuid("share_id").notNull().unique(),
 });

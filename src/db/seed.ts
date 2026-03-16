@@ -134,6 +134,80 @@ function calculateScoreStatus(score: number): string {
     return "critical";
 }
 
+interface RoastIssue {
+    type: "error" | "success";
+    title: string;
+    description: string;
+}
+
+interface DiffLine {
+    type: "removed" | "added" | "context";
+    code: string;
+}
+
+function generateIssues(scoreStatus: string): RoastIssue[] {
+    const allIssues: RoastIssue[] = [
+        {
+            type: "error",
+            title: "using deprecated method",
+            description:
+                "This code uses a deprecated method that may be removed in future versions.",
+        },
+        {
+            type: "error",
+            title: "no error handling",
+            description:
+                "This code lacks proper error handling, which could lead to unexpected crashes.",
+        },
+        {
+            type: "error",
+            title: "security vulnerability",
+            description:
+                "This code appears to have a security vulnerability that could be exploited.",
+        },
+        {
+            type: "success",
+            title: "working code",
+            description:
+                "At least the code actually works. That's more than I can say for most.",
+        },
+        {
+            type: "success",
+            title: "good naming",
+            description:
+                "The variable names are actually descriptive. Color me surprised.",
+        },
+    ];
+
+    const count = scoreStatus === "critical" || scoreStatus === "poor" ? 3 : 2;
+    return allIssues.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function generateSuggestedFix(code: string): DiffLine[] {
+    const lines = code.split("\n");
+    const result: DiffLine[] = [];
+
+    for (let i = 0; i < Math.min(lines.length + 2, 6); i++) {
+        if (i === 0) {
+            result.push({ type: "context", code: "function improvedCode() {" });
+        } else if (i === lines.length + 1) {
+            result.push({ type: "context", code: "}" });
+        } else if (i - 1 < lines.length) {
+            if (Math.random() > 0.5) {
+                result.push({ type: "removed", code: `  ${lines[i - 1]}` });
+                result.push({
+                    type: "added",
+                    code: `  // TODO: Fix this line`,
+                });
+            } else {
+                result.push({ type: "context", code: `  ${lines[i - 1]}` });
+            }
+        }
+    }
+
+    return result;
+}
+
 function generateRoast(language: Language) {
     const code = getRandomElement(codeSnippets[language]);
     const score = Number((Math.random() * 10).toFixed(1));
@@ -143,6 +217,9 @@ function generateRoast(language: Language) {
         ? getRandomElement(roastMessages[scoreStatus])
         : "Code submitted successfully.";
 
+    const issues = generateIssues(scoreStatus);
+    const suggestedFix = generateSuggestedFix(code);
+
     return {
         code,
         language,
@@ -150,6 +227,9 @@ function generateRoast(language: Language) {
         scoreStatus,
         roastMode,
         roastMessage,
+        verdict: roastMessage,
+        issues,
+        suggestedFix,
         shareId: faker.string.uuid(),
         createdAt: faker.date.between({
             from: new Date("2024-01-01"),
@@ -161,6 +241,9 @@ function generateRoast(language: Language) {
 async function seed() {
     console.log("🌱 Seeding database...");
 
+    // Clear existing roasts
+    await client`DELETE FROM roasts`;
+
     const roasts: ReturnType<typeof generateRoast>[] = [];
 
     for (let i = 0; i < 100; i++) {
@@ -170,7 +253,7 @@ async function seed() {
 
     for (const roast of roasts) {
         await client`
-            INSERT INTO roasts (code, language, score, score_status, roast_mode, roast_message, created_at, share_id)
+            INSERT INTO roasts (code, language, score, score_status, roast_mode, roast_message, verdict, issues, suggested_fix, created_at, share_id)
             VALUES (
                 ${roast.code},
                 ${roast.language},
@@ -178,6 +261,9 @@ async function seed() {
                 ${roast.scoreStatus},
                 ${roast.roastMode},
                 ${roast.roastMessage},
+                ${roast.verdict},
+                ${JSON.stringify(roast.issues)},
+                ${JSON.stringify(roast.suggestedFix)},
                 ${roast.createdAt},
                 ${roast.shareId}
             )
