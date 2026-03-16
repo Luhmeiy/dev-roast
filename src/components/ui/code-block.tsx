@@ -29,7 +29,7 @@ export async function CodeBlock({
 							<span
 								// biome-ignore lint/suspicious/noArrayIndexKey: Line index is stable for static code
 								key={i}
-								className="font-mono text-[12px] leading-normal text-[#525252]"
+								className="font-mono text-xs leading-normal text-[#525252]"
 							>
 								{i + 1}
 							</span>
@@ -37,7 +37,7 @@ export async function CodeBlock({
 					</div>
 				)}
 				<div
-					className="flex-1 p-3 [&_pre]:bg-transparent! [&_pre]:m-0! [&_pre]:p-0! [&_pre]:leading-normal! [&_code]:bg-transparent! [&_code]:text-[#E5E5E5]! [&_code]:font-mono! [&_code]:text-[12px]! [&_code]:leading-normal!"
+					className="flex-1 p-3 [&_pre]:bg-transparent! [&_pre]:m-0! [&_pre]:p-0! [&_pre]:leading-normal! [&_code]:bg-transparent! [&_code]:text-[#E5E5E5]! [&_code]:font-mono! [&_code]:text-xs! [&_code]:leading-normal!"
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki provides safe HTML output
 					dangerouslySetInnerHTML={{ __html: html }}
 				/>

@@ -20,6 +20,28 @@ export const appRouter = createTRPCRouter({
                 : 0,
         };
     }),
+
+    leaderboard: baseProcedure.query(async () => {
+        const result = await db
+            .select({
+                id: roasts.id,
+                code: roasts.code,
+                language: roasts.language,
+                score: roasts.score,
+                scoreStatus: roasts.scoreStatus,
+            })
+            .from(roasts)
+            .orderBy(roasts.score)
+            .limit(3);
+
+        return result.map((roast, index) => ({
+            rank: index + 1,
+            score: roast.score,
+            scoreStatus: roast.scoreStatus as "critical" | "warning" | "good",
+            code: roast.code.split("\n").slice(0, 3),
+            language: roast.language,
+        }));
+    }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -227,6 +227,59 @@ Wrap both in a shared scrollable container:
 
 ---
 
+### 7. Server Component with Direct tRPC Caller (No Client Fetch)
+
+**When to use:** Data that doesn't need client-side interactivity (static data, leaderboards, etc.)
+
+**Why:** Faster initial render, simpler code, no client-side fetch needed.
+
+**Pattern:**
+```typescript
+// src/trpc/router.ts - Add procedure
+export const appRouter = createTRPCRouter({
+    leaderboard: baseProcedure.query(async () => {
+        const result = await db.select(...).from(roasts).orderBy(roasts.score).limit(3);
+        return result.map((roast, index) => ({ rank: index + 1, ... }));
+    }),
+});
+
+// src/trpc/server.ts - Export caller
+export const caller = appRouter.createCaller(createTRPCContext());
+
+// src/app/page.tsx - Use directly in RSC
+import { caller } from "@/trpc/server";
+
+export default async function Home() {
+    const leaderboardData = await caller.leaderboard();
+    return <LeaderboardTable entries={leaderboardData} />;
+}
+```
+
+**Key points:**
+- Use `caller` (not `useQuery`) for server-side fetching
+- No Suspense needed - data is available on first render
+- Component receives data as props (server component)
+- Only use client components when interactivity is needed
+
+---
+
+### 8. Rule: Server Components First
+
+**Default to server components.** Only use client components (`"use client"`) when:
+- User interaction (onClick, onChange, state)
+- Browser-only APIs (localStorage, window)
+- Real-time data that changes during user session
+
+**Examples:**
+| Data Type | Approach |
+|-----------|----------|
+| Metrics (updates during session) | Client + prefetch |
+| Leaderboard (static during session) | Server + caller |
+| Form input | Client component |
+| Display-only tables | Server component |
+
+---
+
 ## Specs Directory
 
 Specs are stored in `specs/` and follow this format:
