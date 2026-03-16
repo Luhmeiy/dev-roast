@@ -5,7 +5,7 @@ import { type ButtonHTMLAttributes, forwardRef, useId, useState } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 
 const toggle = tv({
-	base: "inline-flex items-center gap-3 font-mono text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50",
+	base: "inline-flex items-center gap-3 font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50",
 	variants: {
 		checked: {
 			true: "text-toggle-on",
