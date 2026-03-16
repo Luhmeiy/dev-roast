@@ -71,6 +71,7 @@ hljs.registerLanguage("clojure", clojure);
 hljs.registerLanguage("fsharp", fsharp);
 
 export const SUPPORTED_LANGUAGES = [
+    { id: "auto", name: "Auto Detect" },
     { id: "plaintext", name: "Plain Text" },
     { id: "javascript", name: "JavaScript" },
     { id: "typescript", name: "TypeScript" },

@@ -1,46 +1,40 @@
+import NumberFlow from "@number-flow/react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CodeBlock } from "@/components/ui/code-block";
+import { caller } from "@/trpc/server";
 
 export const metadata: Metadata = {
     title: "Shame Leaderboard | DevRoast",
     description: "// the most roasted code on the internet",
 };
 
-const leaderboardData = [
-    {
-        rank: 1,
-        score: 1.2,
-        code: 'eval(prompt("enter code"))\ndocument.write(response)\n// trust the user lol',
-        language: "javascript",
-    },
-    {
-        rank: 2,
-        score: 1.8,
-        code: "if (x == true) { return true; }\nelse if (x == false) { return false; }\nelse { return !false; }",
-        language: "typescript",
-    },
-    {
-        rank: 3,
-        score: 2.1,
-        code: "SELECT * FROM users WHERE 1=1\n-- TODO: add authentication",
-        language: "sql",
-    },
-    {
-        rank: 4,
-        score: 2.5,
-        code: "catch (e) {\n// ignore\n}",
-        language: "javascript",
-    },
-    {
-        rank: 5,
-        score: 2.8,
-        code: "const sleep = (ms) =>\n  new Date(Date.now() + ms)\n  while(new Date() < end) {}",
-        language: "javascript",
-    },
-];
+export const revalidate = 3600;
 
-export default function LeaderboardPage() {
+const PAGE_SIZE = 20;
+
+interface PageProps {
+    params: Promise<{
+        slug?: string[];
+    }>;
+}
+
+export default async function LeaderboardPage(props: PageProps) {
+    const params = await props.params;
+    const page = params.slug?.[0] ? parseInt(params.slug[0], 10) : 1;
+    const offset = (page - 1) * PAGE_SIZE;
+
+    const [leaderboardData, metricsData] = await Promise.all([
+        caller.leaderboard({ limit: PAGE_SIZE, offset }),
+        caller.metrics(),
+    ]);
+
+    const { entries, totalCount } = leaderboardData;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    const currentPage = page;
+    const showingFrom = offset + 1;
+    const showingTo = Math.min(offset + PAGE_SIZE, totalCount);
+
     return (
         <div className="min-h-screen bg-[#0C0C0C]">
             <main className="mx-auto flex w-[960px] max-w-full flex-col gap-10 px-20 py-10">
@@ -58,30 +52,37 @@ export default function LeaderboardPage() {
                     </p>
                     <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-[#737373]">
-                            2,847 submissions
+                            <span suppressHydrationWarning>
+                                <NumberFlow value={totalCount} />
+                            </span>{" "}
+                            submissions
                         </span>
                         <span className="font-mono text-xs text-[#737373]">
                             {"\u00b7"}
                         </span>
                         <span className="font-mono text-xs text-[#737373]">
-                            avg score: 4.2/10
+                            avg score:{" "}
+                            <span suppressHydrationWarning>
+                                <NumberFlow value={metricsData.avgScore} />
+                            </span>
+                            /10
                         </span>
                     </div>
                 </section>
 
                 <section className="flex flex-col gap-5">
-                    {leaderboardData.map((entry) => (
+                    {entries.map((entry) => (
                         <div
                             key={entry.rank}
                             className="flex flex-col border border-[#1F1F1F] bg-[#0F0F0F]"
                         >
                             <div className="flex h-12 items-center justify-between border-b border-[#1F1F1F] px-5">
                                 <div className="flex items-center gap-4">
-                                    <span className="font-mono text-xs font-bold text-[#737373]">
+                                    <span className="font-mono text-xs text-[#737373]">
                                         #{entry.rank}
                                     </span>
                                     <span
-                                        className={`font-mono text-xs font-bold ${
+                                        className={`font-mono text-xs ${
                                             entry.score <= 2
                                                 ? "text-red-500"
                                                 : entry.score <= 4
@@ -97,7 +98,7 @@ export default function LeaderboardPage() {
                                         {entry.language}
                                     </span>
                                     <span className="font-mono text-xs text-[#525252]">
-                                        {entry.code.split("\n").length} lines
+                                        {entry.lineCount} lines
                                     </span>
                                 </div>
                             </div>
@@ -110,6 +111,44 @@ export default function LeaderboardPage() {
                             </div>
                         </div>
                     ))}
+                </section>
+
+                <section className="flex flex-col items-center gap-4 pt-4">
+                    <span className="font-mono text-xs text-[#737373]">
+                        showing {showingFrom}-{showingTo} of{" "}
+                        <span suppressHydrationWarning>
+                            <NumberFlow value={totalCount} />
+                        </span>
+                    </span>
+                    <div className="flex items-center gap-4">
+                        {currentPage > 1 ? (
+                            <Link
+                                href={`/leaderboard/${currentPage - 1}`}
+                                className="font-mono text-xs text-[#525252] hover:text-[#A3A3A3]"
+                            >
+                                {"<"} previous
+                            </Link>
+                        ) : (
+                            <span className="font-mono text-xs text-[#333333] cursor-not-allowed">
+                                {"<"} previous
+                            </span>
+                        )}
+                        <span className="font-mono text-xs text-[#737373]">
+                            page {currentPage} of {totalPages}
+                        </span>
+                        {currentPage < totalPages ? (
+                            <Link
+                                href={`/leaderboard/${currentPage + 1}`}
+                                className="font-mono text-xs text-[#525252] hover:text-[#A3A3A3]"
+                            >
+                                next {">"}
+                            </Link>
+                        ) : (
+                            <span className="font-mono text-xs text-[#333333] cursor-not-allowed">
+                                next {">"}
+                            </span>
+                        )}
+                    </div>
                 </section>
 
                 <section className="flex items-center justify-center pt-4">
