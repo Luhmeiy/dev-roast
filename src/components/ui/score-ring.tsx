@@ -39,6 +39,7 @@ export const ScoreRing = forwardRef<HTMLDivElement, ScoreRingProps>(
                     width={size}
                     height={size}
                     aria-label={`Score: ${score} out of ${maxScore}`}
+                    suppressHydrationWarning
                 >
                     <circle
                         cx={size / 2}

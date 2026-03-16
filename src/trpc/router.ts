@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { roasts } from "@/db/schema";
 import { generateRoast } from "@/utils/ai";
+import { detectLanguage } from "@/utils/languageDetection";
 import { baseProcedure, createTRPCRouter } from "./init";
 
 export const appRouter = createTRPCRouter({
@@ -80,7 +81,14 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ input }) => {
             const { code, language, roastMode } = input;
 
-            const roastResult = await generateRoast(code, language, roastMode);
+            const actualLanguage =
+                language === "auto" ? detectLanguage(code) : language;
+
+            const roastResult = await generateRoast(
+                code,
+                actualLanguage,
+                roastMode,
+            );
 
             const shareId = uuidv4();
 
@@ -89,7 +97,7 @@ export const appRouter = createTRPCRouter({
                 .values({
                     code,
                     language:
-                        language as (typeof roasts.language.enumValues)[number],
+                        actualLanguage as (typeof roasts.language.enumValues)[number],
                     score: roastResult.score,
                     scoreStatus:
                         roastResult.scoreStatus as (typeof roasts.scoreStatus.enumValues)[number],

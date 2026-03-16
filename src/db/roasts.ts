@@ -133,6 +133,24 @@ export async function getRoastByShareId(shareId: string) {
     return result;
 }
 
+export async function getRoastById(id: number) {
+    const [result] = await db
+        .select({
+            id: roasts.id,
+            code: roasts.code,
+            language: roasts.language,
+            score: roasts.score,
+            scoreStatus: roasts.scoreStatus,
+            roastMode: roasts.roastMode,
+            verdict: roasts.verdict,
+            issues: roasts.issues,
+            suggestedFix: roasts.suggestedFix,
+        })
+        .from(roasts)
+        .where(eq(roasts.id, id));
+    return result || null;
+}
+
 export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
     const results = await db
         .select({
