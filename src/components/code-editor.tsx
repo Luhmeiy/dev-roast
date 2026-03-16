@@ -10,6 +10,8 @@ import {
     setStoredLanguage,
 } from "@/utils/languageDetection";
 
+export type { LanguageId };
+
 const Editor = dynamic(
     () => import("react-simple-code-editor").then((mod) => mod.default),
     { ssr: false },
@@ -18,9 +20,12 @@ const Editor = dynamic(
 export interface CodeEditorProps {
     value?: string;
     onChange?: (value: string) => void;
+    language?: LanguageId;
+    onLanguageChange?: (language: LanguageId) => void;
     className?: string;
     maxLines?: number;
     maxChars?: number;
+    disabled?: boolean;
 }
 
 const DEFAULT_MAX_LINES = 30;
@@ -30,35 +35,60 @@ const DEFAULT_MAX_CHARS = 2000;
 export function CodeEditor({
     value = "",
     onChange,
+    language: controlledLanguage,
+    onLanguageChange,
     className,
     maxLines = DEFAULT_MAX_LINES,
     maxChars = DEFAULT_MAX_CHARS,
+    disabled = false,
 }: CodeEditorProps) {
-    const [language, setLanguage] = useState<LanguageId>("plaintext");
+    const [internalLanguage, setInternalLanguage] =
+        useState<LanguageId>("auto");
+    const language = controlledLanguage ?? internalLanguage;
+    const setLanguage = useCallback(
+        (newLang: LanguageId) => {
+            if (onLanguageChange) {
+                onLanguageChange(newLang);
+            } else {
+                setInternalLanguage(newLang);
+            }
+            setStoredLanguage(newLang);
+        },
+        [onLanguageChange],
+    );
+
     const lines = value ? value.split("\n") : [];
     const lineCount = Math.max(lines.length, 16);
     const charCount = value.length;
     const isOverLimit = charCount > maxChars;
 
     useEffect(() => {
-        const stored = getStoredLanguage();
-        setLanguage(stored);
-    }, []);
+        if (!controlledLanguage) {
+            const stored = getStoredLanguage();
+            setInternalLanguage(stored);
+        }
+    }, [controlledLanguage]);
 
     useEffect(() => {
-        if (value && language === "plaintext") {
-            const detected = detectLanguage(value);
-            if (detected !== "plaintext") {
-                setLanguage(detected);
-                setStoredLanguage(detected);
+        // Only auto-detect if parent hasn't explicitly set a language (controlledLanguage is undefined or "auto")
+        // When controlledLanguage is explicitly set to a specific language, don't auto-detect
+        if (!controlledLanguage || controlledLanguage === "auto") {
+            if (value) {
+                const detected = detectLanguage(value);
+                if (detected !== "plaintext") {
+                    setInternalLanguage(detected);
+                }
             }
         }
-    }, [value, language]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value]);
 
-    const handleLanguageChange = useCallback((newLanguage: LanguageId) => {
-        setLanguage(newLanguage);
-        setStoredLanguage(newLanguage);
-    }, []);
+    const handleLanguageChange = useCallback(
+        (newLanguage: LanguageId) => {
+            setLanguage(newLanguage);
+        },
+        [setLanguage],
+    );
 
     const handleChange = useCallback(
         (newValue: string) => {
@@ -67,11 +97,20 @@ export function CodeEditor({
         [onChange],
     );
 
-    const highlighted = highlightCode(value, language);
+    // Use detected language if controlled is "auto" or undefined
+    const displayLanguage =
+        !controlledLanguage || controlledLanguage === "auto"
+            ? internalLanguage
+            : controlledLanguage;
+
+    const highlighted =
+        displayLanguage === "auto" || displayLanguage === "plaintext"
+            ? highlightCode(value, "plaintext")
+            : highlightCode(value, displayLanguage);
 
     return (
         <div
-            className={`flex w-full max-w-[780px] flex-col border border-zinc-800 bg-zinc-900 overflow-hidden ${className || ""}`}
+            className={`flex w-full max-w-[780px] flex-col border border-zinc-800 bg-zinc-900 overflow-hidden font-mono text-xs ${className || ""}`}
         >
             <div className="flex h-10 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
                 <div className="flex items-center gap-4">
@@ -81,8 +120,9 @@ export function CodeEditor({
                         <span className="h-3 w-3 rounded-full bg-emerald-500" />
                     </div>
                     <LanguageSelector
-                        value={language}
+                        value={displayLanguage}
                         onChange={handleLanguageChange}
+                        disabled={disabled}
                     />
                 </div>
             </div>
@@ -90,14 +130,9 @@ export function CodeEditor({
                 className="flex max-h-[924px] overflow-y-auto"
                 style={{ maxHeight: maxLines * LINE_HEIGHT + 24 }}
             >
-                <div className="flex flex-col border-r border-zinc-800 bg-zinc-950 px-4 py-3 text-right select-none">
+                <div className="flex flex-col border-r border-zinc-800 bg-zinc-950 px-4 py-3 text-right select-none text-zinc-600 leading-normal">
                     {Array.from({ length: lineCount }, (_, i) => (
-                        <span
-                            key={i}
-                            className="font-mono text-xs leading-normal text-zinc-600"
-                        >
-                            {i + 1}
-                        </span>
+                        <span key={i}>{i + 1}</span>
                     ))}
                 </div>
                 <div className="flex-1" suppressHydrationWarning>
@@ -106,8 +141,8 @@ export function CodeEditor({
                         onValueChange={handleChange}
                         highlight={(_code) => highlighted}
                         padding={12}
-                        className="font-mono text-xs leading-normal text-zinc-50"
-                        textareaClassName="focus:outline-none text-zinc-50"
+                        className="leading-normal text-zinc-50"
+                        textareaClassName={`focus:outline-none text-zinc-50 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
                         style={{
                             minHeight: "100%",
                             background: "transparent",
@@ -115,11 +150,12 @@ export function CodeEditor({
                         }}
                         spellCheck={false}
                         placeholder="// paste your code here..."
+                        readOnly={disabled}
                     />
                 </div>
             </div>
             <div
-                className={`flex justify-end border-t border-zinc-800 bg-zinc-900 px-3 py-1 text-xs ${isOverLimit ? "text-red-400" : "text-zinc-500"}`}
+                className={`flex justify-end border-t border-zinc-800 bg-zinc-900 px-3 py-1 ${isOverLimit ? "text-red-400" : "text-zinc-500"}`}
             >
                 <span>
                     {charCount} / {maxChars}
@@ -132,13 +168,16 @@ export function CodeEditor({
 function LanguageSelector({
     value,
     onChange,
+    disabled = false,
 }: {
     value: LanguageId;
     onChange: (lang: LanguageId) => void;
+    disabled?: boolean;
 }) {
     const [isOpen, setIsOpen] = useState(false);
 
     const languages: { id: LanguageId; label: string }[] = [
+        { id: "auto", label: "Auto Detect" },
         { id: "plaintext", label: "Plain Text" },
         { id: "javascript", label: "JavaScript" },
         { id: "typescript", label: "TypeScript" },
@@ -148,14 +187,19 @@ function LanguageSelector({
     ];
 
     const currentLabel =
-        languages.find((l) => l.id === value)?.label || "Plain Text";
+        languages.find((l) => l.id === value)?.label || "Auto Detect";
 
     return (
         <div className="relative">
             <button
                 type="button"
-                className="flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
-                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
+                    disabled
+                        ? "cursor-not-allowed text-zinc-600"
+                        : "cursor-pointer text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
             >
                 <span>{currentLabel}</span>
                 <svg
